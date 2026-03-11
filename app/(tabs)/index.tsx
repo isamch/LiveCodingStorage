@@ -1,98 +1,82 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Switch, View, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function ThemeScreen() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-export default function HomeScreen() {
+  useEffect(() => {
+    loadTheme();
+  }, []);
+
+  const loadTheme = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem('@theme_mode');
+      console.log('📖 Loaded theme:', savedTheme);
+      
+      if (savedTheme === 'dark') {
+        setIsDarkMode(true);
+      }
+    } catch (error) {
+      console.error('❌ Error loading theme:', error);
+    }
+  };
+
+  const toggleTheme = async (value: boolean) => {
+    setIsDarkMode(value);
+    
+    const theme = value ? 'dark' : 'light';
+    await AsyncStorage.setItem('@theme_mode', theme);
+    console.log('✅ Theme saved:', theme);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.container, isDarkMode && styles.darkContainer]}>
+      <Text style={[styles.title, isDarkMode && styles.darkText]}>
+        Theme Settings
+      </Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View style={styles.switchContainer}>
+        <Text style={[styles.label, isDarkMode && styles.darkText]}>
+          Dark Mode
+        </Text>
+        <Switch
+          value={isDarkMode}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#767577', true: '#81b0ff' }}
+          thumbColor={isDarkMode ? '#f5dd4b' : '#f4f3f4'}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  darkContainer: {
+    backgroundColor: '#1a1a1a',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#000',
+  },
+  darkText: {
+    color: '#fff',
+  },
+  switchContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  label: {
+    fontSize: 18,
+    color: '#000',
   },
 });
